@@ -1,5 +1,4 @@
-from qiskit import QuantumCircuit
-
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 
 def build_dj_oracle(case: int, n_qubits: int = 1) -> QuantumCircuit:
     """
@@ -38,23 +37,17 @@ def deutsch_jozsa(case: int, n_qubits: int = 1) -> QuantumCircuit:
     """
     oracle = build_dj_oracle(case, n_qubits)
     total = n_qubits + 1
-    qc = QuantumCircuit(total, n_qubits)  # n_qubits classical bits for measurement
 
-    # Step 1: ancilla to |1⟩
+    qr = QuantumRegister(total)
+    cr = ClassicalRegister(n_qubits, name='meas')  # explicit name
+    qc = QuantumCircuit(qr, cr)
+
     qc.x(n_qubits)
-
-    # Step 2: Hadamard all qubits → superposition + |−⟩
     qc.h(range(total))
-
-    # Step 3: oracle
     qc.barrier()
     qc.compose(oracle, inplace=True)
     qc.barrier()
-
-    # Step 4: Hadamard input qubits
     qc.h(range(n_qubits))
-
-    # Step 5: measure input qubits
     qc.measure(range(n_qubits), range(n_qubits))
 
     return qc
