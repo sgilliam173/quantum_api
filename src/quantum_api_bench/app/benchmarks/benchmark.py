@@ -17,7 +17,7 @@ class BenchmarkResults:
     circuit_depth: int
     gate_count: int
     fidelity: float | None  # use none for real hardware
-    correct_result: bool
+    acceptable_performance: bool
     metadata: dict
 
 def run_benchmark(
@@ -80,7 +80,7 @@ def run_benchmark(
         circuit_depth=transpiled.depth(),
         gate_count=sum(transpiled.count_ops().values()),
         fidelity=fidelity,
-        correct_result=(correct_counts / total_counts) > 0.9,
+        acceptable_performance= (correct_counts / total_counts) > 90,
         metadata={
             'success_probability': correct_counts / total_counts,
             'top_result': max(correct_counts, key=correct_counts.get)
