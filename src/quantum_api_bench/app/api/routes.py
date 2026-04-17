@@ -13,12 +13,11 @@ def _resolve_backend(backend_type: str):
     if backend_type == "ideal":
         return quantum_backend.get_simulator(), "ideal"
     elif backend_type == "noisy":
-        return quantum_backend.get_noisy_simulator(), "noisy_sim"
+        return quantum_backend.get_noisy_simulator(), "noisy_sim"  # IBM calibrated
     elif backend_type == "real":
         return quantum_backend.get_real_backend(), "real"
     else:
         raise HTTPException(400, f"Unknown backend: {backend_type}")
-
 
 @router.post("/deutsch-jozsa", response_model=BenchmarkResponse)
 def run_dj(req: DJRequest):

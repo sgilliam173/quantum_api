@@ -15,7 +15,8 @@ dependencies = [
     "scipy (>=1.17.1,<2.0.0)",
     "pandas (>=3.0.1,<4.0.0)",
     "qiskit-ibm-runtime (>=0.45.1,<0.46.0)",
-    "qiskit-aer (>=0.17.2,<0.18.0)"
+    "qiskit-aer (>=0.17.2,<0.18.0)",
+    "matplotlib (>=3.10.8,<4.0.0)"
 ]
 
 [tool.poetry]

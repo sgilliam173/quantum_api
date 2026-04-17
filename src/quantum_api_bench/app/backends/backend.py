@@ -1,7 +1,7 @@
 from qiskit_ibm_runtime import SamplerV2 as Sampler, QiskitRuntimeService
 from qiskit.primitives import BackendSamplerV2
 from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel
+from qiskit_aer.noise import NoiseModel, depolarizing_error
 from dataclasses import dataclass, field
 from typing import Optional
 import os
@@ -22,6 +22,20 @@ class QuantumBackend:
         """Simulator with noise model pulled from real backend."""
         noise = self._get_noise_model()
         return AerSimulator(noise_model=noise)
+
+    def get_local_noisy_simulator(self) -> AerSimulator:
+        """Noisy simulator using a generic depolarizing noise model.
+        Does not require IBM credentials so we can use this offline"""
+        noise_model = NoiseModel()
+        single_qubit_error = depolarizing_error(0.01, 1)
+        two_qubit_error = depolarizing_error(0.02, 2)
+        noise_model.add_all_qubit_quantum_error(
+            single_qubit_error, ['h', 'x', 'z', 'u1', 'u2', 'u3']
+        )
+        noise_model.add_all_qubit_quantum_error(
+            two_qubit_error, ['cx', 'cz']
+        )
+        return AerSimulator(noise_model=noise_model)
 
     def get_real_backend(self):
         """Returns real IBM backend. Requires saved credentials."""

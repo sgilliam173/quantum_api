@@ -1,11 +1,12 @@
 import time
-import numpy as np
+import math
 from dataclasses import dataclass
-from typing import Callable
 from qiskit import QuantumCircuit, transpile
-from qiskit.quantum_info import Statevector, state_fidelity
-from qiskit_aer import AerSimulator
+from qiskit.quantum_info import Statevector
 from qiskit.primitives import BackendSamplerV2
+from qiskit_ibm_runtime import SamplerV2 as IBMSampler
+from qiskit.quantum_info import Statevector, partial_trace
+
 
 @dataclass
 class BenchmarkResults:
@@ -39,13 +40,15 @@ def run_benchmark(
     # Number of layers of gates. Tells us how long the computation takes relative to coherence time
     # A deeper circuit is going to be more exposed to noise because the qubits have more time
 
-
-    sampler = BackendSamplerV2(backend=backend)
+    start = time.perf_counter()
+    if backend_type == "real":
+        sampler = IBMSampler(mode=backend)
+    else:
+        sampler = BackendSamplerV2(backend=backend)
 
     # the job runs "shots" times. Since quantum measurement is probabilistic, you need many samples
     # to build up a statistical picture of the output distribution. Each shot collapses the quantum
     # state to a classical bitstring and the sampler collects them
-    start = time.perf_counter()
     job = sampler.run([transpiled], shots=shots)
     result = job.result()
     elapsed_ms = time.perf_counter() - start
@@ -57,13 +60,40 @@ def run_benchmark(
     counts = pub_results.data.meas.get_counts()
 
     ### compare sim to real ###
-    fidelity = None
-    if ideal_statevector is not None:
-        ideal_sim = AerSimulator(method='statevector')
-        # remove measurements to get state vector
+    if backend_type == "ideal":
+        fidelity = 1.0
+    else:
         qc_no_meas = qc.remove_final_measurements(inplace=False)
-        sv = Statevector.from_instruction(qc_no_meas)
-        fidelity = float(state_fidelity(sv, ideal_sim))
+        sv_ideal = Statevector.from_instruction(qc_no_meas)
+
+        n_measured = qc.num_clbits
+        n_total = qc.num_qubits
+        n_ancilla = n_total - n_measured
+
+        if n_ancilla > 0:
+            # Trace out ancilla qubit(s) — DJ has 1 ancilla, Grover has none
+            dm = partial_trace(sv_ideal, [n_total - 1])
+            ideal_probs_raw = {
+                format(i, f'0{n_measured}b'): float(dm.data[i, i].real)
+                for i in range(2 ** n_measured)
+            }
+        else:
+            # No ancilla — use statevector probabilities directly
+            ideal_probs_raw = {
+                format(i, f'0{n_measured}b'): float(p)
+                for i, p in enumerate(sv_ideal.probabilities())
+            }
+
+        # Reverse bit order to match measurement convention
+        ideal_probs = {k[::-1]: v for k, v in ideal_probs_raw.items()}
+
+        total = sum(counts.values())
+        measured_probs = {k: v / total for k, v in counts.items()}
+
+        fidelity = sum(
+            math.sqrt(ideal_probs.get(k, 0) * measured_probs.get(k, 0))
+            for k in set(ideal_probs) | set(measured_probs)
+        )
 
     total_counts = sum(counts.values())
     correct_counts = counts.get(expected_key, 0)
