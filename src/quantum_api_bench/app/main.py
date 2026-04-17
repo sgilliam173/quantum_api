@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from quantum_api_bench.app.api.routes import router
 
 app = FastAPI(
@@ -8,6 +9,10 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
 
 if __name__ == "__main__":
     import uvicorn

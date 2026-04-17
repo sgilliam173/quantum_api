@@ -29,6 +29,7 @@ def run_benchmark(
         shots: int = 1024,
         ideal_statevector: Statevector | None = None
 ) -> BenchmarkResults:
+    threshold = 0.9 if backend_type == "ideal" else 0.7
 
     # translates my circuit into the native gate set supported by the current IBM hardware
     # this is the circuit that gets actually executed
@@ -37,11 +38,7 @@ def run_benchmark(
     ### NOTE: Both of the depth and gate count increase after transpilation ###
     # Number of layers of gates. Tells us how long the computation takes relative to coherence time
     # A deeper circuit is going to be more exposed to noise because the qubits have more time
-    # to decohere before measurement
-    circuit_depth=transpiled.depth()
 
-    # The raw total number of operations.
-    gate_count=sum(transpiled.count_ops().values())
 
     sampler = BackendSamplerV2(backend=backend)
 
@@ -80,7 +77,7 @@ def run_benchmark(
         circuit_depth=transpiled.depth(),
         gate_count=sum(transpiled.count_ops().values()),
         fidelity=fidelity,
-        correct_result=(correct_counts / total_counts) > 0.9,
+        correct_result=(correct_counts / total_counts) > threshold,
         metadata={
             'success_probability': correct_counts / total_counts,
             'top_result': max(counts, key=counts.get)

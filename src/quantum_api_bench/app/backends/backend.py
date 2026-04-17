@@ -10,7 +10,7 @@ import os
 @dataclass
 class QuantumBackend:
     use_real_hardware: bool = False
-    ibm_backend_name: str = "ibm_brisbane"
+    ibm_backend_name: str = "ibm_marrakesh"
     _service: Optional[QiskitRuntimeService] = field(default=None, repr=False)
     _noise_model: Optional[NoiseModel] = field(default=None, repr=False)
 
@@ -46,9 +46,9 @@ class QuantumBackend:
                     "Run: export IBM_QUANTUM_TOKEN=your_token"
                 )
             QiskitRuntimeService.save_account(
-                channel="ibm_quantum", token=token, overwrite=True
+                channel="ibm_quantum_platform", token=token, overwrite=True
             )
-            self._service = QiskitRuntimeService(channel="ibm_quantum")
+            self._service = QiskitRuntimeService(channel="ibm_quantum_platform")
         return self._service
 
     def _get_noise_model(self) -> NoiseModel:
