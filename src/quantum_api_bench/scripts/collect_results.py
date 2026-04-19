@@ -7,7 +7,7 @@ from quantum_api_bench.app.benchmarks.benchmark import run_benchmark
 
 
 SHOTS = 1024
-RESULTS_FILE = "benchmark_results.json"
+RESULTS_FILE = "../../data_and_plots/benchmark_results.json"
 
 # Define all experiments
 # (algorithm, params, expected_key, label)

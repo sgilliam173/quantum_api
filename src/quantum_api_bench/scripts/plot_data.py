@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-with open("benchmark_results.json") as f:
+with open("../../data_and_plots/benchmark_results.json") as f:
     raw = json.load(f)
 
 EXPERIMENTS = [
@@ -102,29 +102,64 @@ plt.close()
 print("\nSaved: fig1_success_probability.png")
 
 # ── Figure 2 — Circuit Depth ──────────────────────────────────────────────────
-fig, ax = plt.subplots(figsize=(10, 5))
+# ── Figure 2a — Circuit Depth DJ ──────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(7, 4))
+
+dj_exps = ["dj_constant_3q", "dj_balanced_3q", "dj_balanced_4q"]
+x = np.arange(len(dj_exps))
 
 for backend in BACKENDS:
-    sub  = df[df.backend == backend].set_index("experiment").reindex(EXPERIMENTS)
-    vals = sub["circuit_depth"].values
-    ax.plot([LABELS[e] for e in EXPERIMENTS], vals,
+    vals = [
+        df[(df.experiment == e) & (df.backend == backend)]["circuit_depth"].values[0]
+        for e in dj_exps
+    ]
+    ax.plot([LABELS[e] for e in dj_exps], vals,
             marker="o", label=BACKEND_NAMES[backend],
             color=COLORS[backend], linewidth=2)
     for xi, val in enumerate(vals):
         ax.annotate(str(int(val)), (xi, val),
                     textcoords="offset points", xytext=(0, 7),
-                    ha="center", fontsize=7, color=COLORS[backend])
+                    ha="center", fontsize=8, color=COLORS[backend])
 
 ax.set_ylabel("Circuit Depth")
-ax.set_title("Circuit Depth After Transpilation")
+ax.set_title("Deutsch-Jozsa — Circuit Depth After Transpilation")
 ax.legend()
 ax.yaxis.grid(True, alpha=0.4)
 ax.set_axisbelow(True)
 
 plt.tight_layout()
-plt.savefig("fig2_circuit_depth.png", dpi=150)
+plt.savefig("fig2a_depth_dj.png", dpi=150)
 plt.close()
-print("Saved: fig2_circuit_depth.png")
+print("Saved: fig2a_depth_dj.png")
+
+# ── Figure 2b — Circuit Depth Grover ─────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(7, 4))
+
+grover_exps = ["grover_2q", "grover_3q", "grover_4q"]
+
+for backend in BACKENDS:
+    vals = [
+        df[(df.experiment == e) & (df.backend == backend)]["circuit_depth"].values[0]
+        for e in grover_exps
+    ]
+    ax.plot([LABELS[e] for e in grover_exps], vals,
+            marker="o", label=BACKEND_NAMES[backend],
+            color=COLORS[backend], linewidth=2)
+    for xi, val in enumerate(vals):
+        ax.annotate(str(int(val)), (xi, val),
+                    textcoords="offset points", xytext=(0, 7),
+                    ha="center", fontsize=8, color=COLORS[backend])
+
+ax.set_ylabel("Circuit Depth")
+ax.set_title("Grover's Algorithm — Circuit Depth After Transpilation")
+ax.legend()
+ax.yaxis.grid(True, alpha=0.4)
+ax.set_axisbelow(True)
+
+plt.tight_layout()
+plt.savefig("fig2b_depth_grover.png", dpi=150)
+plt.close()
+print("Saved: fig2b_depth_grover.png")
 
 # ── Figure 3 — Depth vs Success Scatter ──────────────────────────────────────
 fig, ax = plt.subplots(figsize=(8, 5))

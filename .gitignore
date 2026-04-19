@@ -1,0 +1,6 @@
+.venv/
+**/__pycache__/
+src/data_and_plots/
+*.py[cod]
+.idea/
+.vscode/
